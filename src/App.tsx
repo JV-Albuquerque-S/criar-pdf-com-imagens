@@ -137,7 +137,7 @@ const clearQueue = () => {
       <input
         type="file"
         multiple
-        accept="image/png"
+        accept="image/png, image/jpeg"
         ref={inputRef}
         onChange={handleFileChange}
         style={{ display: "none" }}
