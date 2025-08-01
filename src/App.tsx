@@ -28,17 +28,6 @@ function App() {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-  const rotateSelectedImage = () => {
-    if (selectedIndex === null) return;
-    setImages((prev) =>
-      prev.map((img, idx) =>
-        idx === selectedIndex
-          ? { ...img, rotated: (img.rotated + 90) % 360 }
-          : img
-      )
-    );
-  };
-
   const addToQueue = () => {
     if (selectedIndex === null) return;
     const selected = images[selectedIndex];
@@ -49,6 +38,7 @@ function App() {
     const alreadyInQueue = new Set(queue.map((q) => q.url));
     const newOnes = images.filter((img) => !alreadyInQueue.has(img.url));
     setQueue((prev) => [...prev, ...newOnes]);
+    setImages((prev) => prev.filter((img) => alreadyInQueue.has(img.url))); // remove os adicionados
   };
 
   const removeSelectedImage = () => {
@@ -160,36 +150,106 @@ const clearQueue = () => {
 
       <div style={{ display: "flex", flexWrap: "wrap", marginTop: "1rem", flexDirection: "column" }}>
         {images.map((img, idx) => (
-          <div
-            key={idx}
-            style={{
-              border: idx === selectedIndex ? "2px solid green" : "1px solid #ccc",
-              margin: "5px",
-              padding: "5px",
-              cursor: "pointer",
-              width: "fit-content"
-            }}
-            onClick={() => setSelectedIndex(idx)}
-            onDoubleClick={() => {
-              const selected = images[idx];
-              if (!queue.some((q) => q.url === selected.url)) {
-                setQueue((prev) => [...prev, selected]);
-              }
-            }}
-          >
-            <img
-              src={img.url}
-              alt={`thumb-${idx}`}
-              width={500}
-              style={{ transform: `rotate(${img.rotated}deg)` }}
-            />
-          </div>
-        ))}
+  <div
+    key={idx}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      margin: "10px 0",
+    }}
+  >
+<div
+      style={{
+        position: "relative",
+        width: "300px",
+        height: "300px",
+        overflow: "hidden",
+        marginRight: "12px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        border: "1px solid #ccc",
+        borderRadius: "6px",
+        backgroundColor: "#f9f9f9",
+      }}
+      onDoubleClick={() => {
+        const selected = images[idx];
+        if (!queue.some((q) => q.url === selected.url)) {
+          setQueue((prev) => [...prev, selected]);
+          setImages((prev) => prev.filter((_, i) => i !== idx));
+        }
+
+      }}
+    >
+      <img
+        src={img.url}
+        alt={`thumb-${idx}`}
+        style={{
+          transform: `rotate(${img.rotated}deg)`,
+          maxWidth: "100%",
+          maxHeight: "100%",
+          display: "block",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          objectFit: "contain",
+          zIndex: 1,
+        }}
+      />
+    </div>
+
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <button
+        onClick={() => {
+          setImages((prev) =>
+            prev.map((imgItem, i) =>
+              i === idx
+                ? { ...imgItem, rotated: (imgItem.rotated + 90) % 360 }
+                : imgItem
+            )
+          );
+        }}
+        style={{
+          backgroundColor: "#FFC107",
+          border: "none",
+          padding: "6px 10px",
+          fontSize: "14px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          color: "#000",
+        }}
+      >
+        🔄 Girar
+      </button>
+
+      <button
+        onClick={() => {
+          if (!queue.some((q) => q.url === img.url)) {
+            setQueue((prev) => [...prev, img]);
+            setImages((prev) => prev.filter((_, i) => i !== idx));
+          } 
+
+        }}
+        style={{
+          backgroundColor: "#009E60",
+          color: "#fff",
+          border: "none",
+          padding: "6px 10px",
+          fontSize: "14px",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        ➕ Incluir
+      </button>
+    </div>
+  </div>
+))}
+
+
       </div>
 
       {selectedIndex !== null && (
   <div style={{ marginTop: "1rem" }}>
-    <button onClick={rotateSelectedImage}>🔄 Girar</button>
     <button onClick={addToQueue} style={{ marginLeft: "1rem" }}>
       ➕ Incluir na fila
     </button>
@@ -217,7 +277,7 @@ const clearQueue = () => {
           className="image-card"
           style={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
             alignItems: "center",
             margin: "6px",
           }}
@@ -226,12 +286,13 @@ const clearQueue = () => {
             src={img.url}
             alt={`fila-${idx}`}
             width={240}
-            style={{ margin: "4px", transform: `rotate(${img.rotated}deg)` }}
+            style={{ marginTop: "50px", marginBottom: "50px", transform: `rotate(${img.rotated}deg)` }}
           />
           <button
             onClick={() => removeFromQueue(idx)}
             style={{
     marginTop: "4px",
+    marginLeft: "100px",
     backgroundColor: "#FF4D4F",
     color: "#fff",
     border: "none",
