@@ -77,7 +77,7 @@ const clearQueue = () => {
       if (i !== 0) pdf.addPage();
       pdf.addImage(
         imgData,
-        "PNG",
+        "JPEG",
         0,
         0,
         imgProps.width * ratio,
@@ -89,36 +89,48 @@ const clearQueue = () => {
   };
 
   const rotateImage = (img: ImageData): Promise<string> => {
-    return new Promise((resolve) => {
-      const image = new Image();
-      image.src = img.url;
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d")!;
-        const angle = img.rotated;
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.src = img.url;
+    image.onload = () => {
+      const angle = img.rotated;
+      const maxWidth = 1000;
 
-        if (angle === 90 || angle === 270) {
-          canvas.width = image.height;
-          canvas.height = image.width;
-        } else {
-          canvas.width = image.width;
-          canvas.height = image.height;
-        }
+      let width = image.width;
+      let height = image.height;
 
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate((angle * Math.PI) / 180);
-        ctx.drawImage(
-          image,
-          -image.width / 2,
-          -image.height / 2,
-          image.width,
-          image.height
-        );
+      if (width > maxWidth) {
+        const ratio = maxWidth / width;
+        width = maxWidth;
+        height = height * ratio;
+      }
 
-        resolve(canvas.toDataURL("image/png"));
-      };
-    });
-  };
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+
+      if (angle === 90 || angle === 270) {
+        canvas.width = height;
+        canvas.height = width;
+      } else {
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((angle * Math.PI) / 180);
+      ctx.drawImage(
+        image,
+        -width / 2,
+        -height / 2,
+        width,
+        height
+      );
+
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+  });
+};
+
 
   return (
     <div style={{ padding: "2rem" }}>
