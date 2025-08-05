@@ -12,6 +12,11 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [queue, setQueue] = useState<ImageData[]>([]);
   const [pdfName, setPdfName] = useState("meu-pdf");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState<string | null>(null);
+  const [tempPdfName, setTempPdfName] = useState("");
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -38,7 +43,12 @@ function App() {
     const alreadyInQueue = new Set(queue.map((q) => q.url));
     const newOnes = images.filter((img) => !alreadyInQueue.has(img.url));
     setQueue((prev) => [...prev, ...newOnes]);
-    setImages((prev) => prev.filter((img) => alreadyInQueue.has(img.url))); // remove os adicionados
+    setImages((prev) => prev.filter((img) => alreadyInQueue.has(img.url)));
+    setSuccessMessage("Imagem adicionada com sucesso!");
+    setShowSuccessMessage(true);
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 2000);
   };
 
   const removeSelectedImage = () => {
@@ -135,7 +145,6 @@ const clearQueue = () => {
   return (
     <div style={{ padding: "2rem" }}>
       <h1>Gerador de PDF com Imagens</h1>
-
       <input
         type="file"
         multiple
@@ -160,7 +169,7 @@ const clearQueue = () => {
   📁 Escolher Imagens
 </button>
 
-      <div style={{ display: "flex", flexWrap: "wrap", marginTop: "1rem", flexDirection: "column" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", marginTop: "1rem", flexDirection: "row" }}>
         {images.map((img, idx) => (
   <div
     key={idx}
@@ -176,7 +185,7 @@ const clearQueue = () => {
         width: "300px",
         height: "300px",
         overflow: "hidden",
-        marginRight: "12px",
+        marginRight: "2px",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -189,6 +198,11 @@ const clearQueue = () => {
         if (!queue.some((q) => q.url === selected.url)) {
           setQueue((prev) => [...prev, selected]);
           setImages((prev) => prev.filter((_, i) => i !== idx));
+          setSuccessMessage("Imagem adicionada com sucesso!");
+          setShowSuccessMessage(true);
+          setTimeout(() => {
+            setShowSuccessMessage(false);
+          }, 2000);
         }
 
       }}
@@ -209,7 +223,7 @@ const clearQueue = () => {
       />
     </div>
 
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginRight: "25px" }}>
       <button
         onClick={() => {
           setImages((prev) =>
@@ -238,8 +252,12 @@ const clearQueue = () => {
           if (!queue.some((q) => q.url === img.url)) {
             setQueue((prev) => [...prev, img]);
             setImages((prev) => prev.filter((_, i) => i !== idx));
-          } 
-
+            setSuccessMessage("Imagem adicionada com sucesso!");
+            setShowSuccessMessage(true);
+            setTimeout(() => {
+              setShowSuccessMessage(false);
+            }, 2000);
+          }
         }}
         style={{
           backgroundColor: "#009E60",
@@ -253,6 +271,25 @@ const clearQueue = () => {
       >
         ➕ Incluir
       </button>
+      <button
+  onClick={() => {
+    setModalImage(img.url);
+    setTempPdfName(pdfName);
+    setShowModal(true);
+  }}
+  style={{
+    backgroundColor: "#17A2B8",
+    color: "#fff",
+    border: "none",
+    padding: "6px 10px",
+    fontSize: "14px",
+    borderRadius: "6px",
+    cursor: "pointer",
+  }}
+>
+  🔍 Ampliar
+</button>
+
     </div>
   </div>
 ))}
@@ -282,53 +319,7 @@ const clearQueue = () => {
 
   <div style={{ marginTop: "2rem" }}>
     <h3>Fila:</h3>
-    <div style={{ display: "flex", flexWrap: "wrap", flexDirection: "column" }}>
-      {queue.map((img, idx) => (
-        <div
-          key={idx}
-          className="image-card"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            margin: "6px",
-          }}
-        >
-          <img
-            src={img.url}
-            alt={`fila-${idx}`}
-            width={240}
-            style={{ marginTop: "50px", marginBottom: "50px", transform: `rotate(${img.rotated}deg)` }}
-          />
-          <button
-            onClick={() => removeFromQueue(idx)}
-            style={{
-    marginTop: "4px",
-    marginLeft: "100px",
-    backgroundColor: "#FF4D4F",
-    color: "#fff",
-    border: "none",
-    padding: "4px 8px",
-    fontSize: "14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  }}
-          >
-            ❌ Remover
-          </button>
-        </div>
-      ))}
-    </div>
-
-    {queue.length > 0 && (
-      <div className="buttons" style={{ marginTop: "1rem" }}>
-        <button onClick={clearQueue} style={{ backgroundColor: "#FF4D4F" }}>
-          🧹 Limpar fila
-        </button>
-      </div>
-    )}
   </div>
-
   <div style={{ marginTop: "2rem" }}>
         <label>
           Nome do PDF:{" "}
@@ -338,10 +329,141 @@ const clearQueue = () => {
             placeholder="meu-arquivo"
           />
         </label>
-        <button onClick={generatePdf} style={{ marginLeft: "1rem" }}>
+        <button onClick={generatePdf} style={{ marginLeft: "1rem", marginRight: "1rem" }}>
           🧾 Gerar PDF
         </button>
+            {queue.length > 0 && (
+        <button onClick={clearQueue} style={{ backgroundColor: "#FF4D4F" }}>
+          🧹 Limpar fila
+        </button>
+    )}
       </div>
+    <div style={{ display: "flex", flexWrap: "wrap", flexDirection: "row" }}>
+      {queue.map((img, idx) => (
+        <div
+  key={idx}
+  style={{
+    width: "300px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    padding: "12px",
+    backgroundColor: "#f9f9f9",
+  }}
+>
+  <img
+    src={img.url}
+    alt={`fila-${idx}`}
+    style={{
+      width: "100%",
+      height: "300px",
+      objectFit: "contain",
+      transform: `rotate(${img.rotated}deg)`,
+      marginBottom: "12px",
+    }}
+  />
+  <button
+    onClick={() => removeFromQueue(idx)}
+    style={{
+      backgroundColor: "#FF4D4F",
+      color: "#fff",
+      border: "none",
+      padding: "6px 12px",
+      fontSize: "14px",
+      borderRadius: "6px",
+      cursor: "pointer",
+    }}
+  >
+    ❌ Remover
+  </button>
+</div>
+
+      ))}
+    </div>
+    {successMessage && (
+  <div
+    style={{
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      backgroundColor: "#d4edda",
+      color: "#155724",
+      border: "1px solid #c3e6cb",
+      borderRadius: "6px",
+      padding: "12px 20px",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+      fontSize: "16px",
+      opacity: showSuccessMessage ? 1 : 0,
+      transition: "opacity 0.5s ease-in-out",
+      zIndex: 1000,
+    }}
+  >
+    {successMessage}
+  </div>
+)}
+      {showModal && modalImage && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+      flexDirection: "column",
+      padding: "2rem",
+    }}
+  >
+    <img
+      src={modalImage}
+      alt="Ampliada"
+      style={{
+        maxWidth: "80%",
+        maxHeight: "70vh",
+        borderRadius: "8px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.5)",
+        marginBottom: "1rem",
+      }}
+    />
+    <input
+      type="text"
+      placeholder="Digite o nome do PDF"
+      value={tempPdfName}
+      onChange={(e) => setTempPdfName(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        marginBottom: "1rem",
+        width: "300px",
+      }}
+    />
+    <button
+      onClick={() => {
+        setPdfName(tempPdfName);
+        setShowModal(false);
+        setModalImage(null);
+      }}
+      style={{
+        padding: "10px 20px",
+        backgroundColor: "#009E60",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontSize: "16px",
+      }}
+    >
+      ✅ Aplicar
+    </button>
+  </div>
+)}
 
     </div>
   );
