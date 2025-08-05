@@ -168,6 +168,23 @@ const clearQueue = () => {
 >
   📁 Escolher Imagens
 </button>
+        <label>
+          Nome do PDF:{" "}
+          <input
+            value={pdfName}
+            onChange={(e) => setPdfName(e.target.value)}
+            placeholder="meu-arquivo"
+          />
+        </label>
+        <button onClick={generatePdf} style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+          🧾 Gerar PDF
+        </button>
+            {queue.length > 0 && (
+        <button onClick={clearQueue} style={{ backgroundColor: "#FF4D4F" }}>
+          🧹 Limpar fila
+        </button>
+    )}
+    <span style={{ marginLeft: "15px", fontSize: "18px" }}>Imagens Incluídas: {queue.length}</span>
 
       <div style={{ display: "flex", flexWrap: "wrap", marginTop: "1rem", flexDirection: "row" }}>
         {images.map((img, idx) => (
@@ -320,24 +337,6 @@ const clearQueue = () => {
   <div style={{ marginTop: "2rem" }}>
     <h3>Fila:</h3>
   </div>
-  <div style={{ marginTop: "2rem" }}>
-        <label>
-          Nome do PDF:{" "}
-          <input
-            value={pdfName}
-            onChange={(e) => setPdfName(e.target.value)}
-            placeholder="meu-arquivo"
-          />
-        </label>
-        <button onClick={generatePdf} style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-          🧾 Gerar PDF
-        </button>
-            {queue.length > 0 && (
-        <button onClick={clearQueue} style={{ backgroundColor: "#FF4D4F" }}>
-          🧹 Limpar fila
-        </button>
-    )}
-      </div>
     <div style={{ display: "flex", flexWrap: "wrap", flexDirection: "row" }}>
       {queue.map((img, idx) => (
         <div
