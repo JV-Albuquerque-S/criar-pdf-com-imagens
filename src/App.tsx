@@ -428,6 +428,19 @@ const clearQueue = () => {
         borderRadius: "8px",
         boxShadow: "0 0 10px rgba(0,0,0,0.5)",
         marginBottom: "1rem",
+        objectFit: "contain",
+        transition: "transform 0.3s ease",
+        transformOrigin: "center center",
+      }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        e.currentTarget.style.transformOrigin = `${x}% ${y}%`;
+        e.currentTarget.style.transform = "scale(2)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
       }}
     />
     <input
