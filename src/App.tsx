@@ -5,6 +5,7 @@ type ImageData = {
   file: File;
   url: string;
   rotated: number;
+  originalIndex: number;
 };
 
 function App() {
@@ -21,17 +22,21 @@ function App() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const filesArray = Array.from(e.target.files);
+  if (!e.target.files) return;
+  const filesArray = Array.from(e.target.files);
 
-    const newImages: ImageData[] = filesArray.map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-      rotated: 0,
-    }));
+  const newImages: ImageData[] = filesArray.map((file, index) => ({
+    file,
+    url: URL.createObjectURL(file),
+    rotated: 0,
+    originalIndex: images.length + index,
+  }));
 
-    setImages((prev) => [...prev, ...newImages]);
-  };
+  setImages((prev) => [...prev, ...newImages]);
+
+  e.target.value = "";
+};
+
 
   const addToQueue = () => {
     if (selectedIndex === null) return;
@@ -64,8 +69,15 @@ const removeAllImages = () => {
 };
 
 const removeFromQueue = (index: number) => {
+  const removed = queue[index];
   setQueue((prev) => prev.filter((_, idx) => idx !== index));
+
+  setImages((prev) => {
+    const updated = [...prev, removed];
+    return updated.sort((a, b) => a.originalIndex - b.originalIndex);
+  });
 };
+
 
 const clearQueue = () => {
   setQueue([]);
@@ -141,6 +153,33 @@ const clearQueue = () => {
   });
 };
 
+function getProcessedImage(img: ImageData): Promise<string> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.src = img.url;
+    image.onload = () => {
+      const width = image.width;
+      const height = image.height;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+
+      if (img.rotated === 90 || img.rotated === 270) {
+        canvas.width = height;
+        canvas.height = width;
+      } else {
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((img.rotated * Math.PI) / 180);
+      ctx.drawImage(image, -width / 2, -height / 2, width, height);
+
+      const result = canvas.toDataURL("image/jpeg", 0.9);
+      resolve(result);
+    };
+  });
+}
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -290,9 +329,11 @@ const clearQueue = () => {
       </button>
       <button
   onClick={() => {
-    setModalImage(img.url);
     setTempPdfName(pdfName);
+    getProcessedImage(img).then((dataUrl) => {
+    setModalImage(dataUrl);
     setShowModal(true);
+  });
   }}
   style={{
     backgroundColor: "#17A2B8",
@@ -306,6 +347,24 @@ const clearQueue = () => {
 >
   🔍 Ampliar
 </button>
+<button
+        onClick={() => {
+          if (!queue.some((q) => q.url === img.url)) {
+            setImages((prev) => prev.filter((_, i) => i !== idx));
+          }
+        }}
+        style={{
+          backgroundColor: "#FF4D4F",
+          color: "#fff",
+          border: "none",
+          padding: "6px 10px",
+          fontSize: "14px",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        ❌ Remover
+      </button>
 
     </div>
   </div>
@@ -430,7 +489,6 @@ const clearQueue = () => {
         marginBottom: "1rem",
         objectFit: "contain",
         transition: "transform 0.3s ease",
-        transformOrigin: "center center",
       }}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
